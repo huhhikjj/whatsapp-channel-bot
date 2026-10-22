@@ -1,0 +1,48 @@
+name: إرسال أذكار وتذكيرات تلقائية كل ساعة 🕌
+
+on:
+  # تشغيل تلقائي كل ساعة بالضبط (0 دقيقة من كل ساعة)
+  schedule:
+    - cron: '0 * * * *'
+
+  # إمكانية التشغيل اليدوي من GitHub لاختبار الإرسال فوراً
+  workflow_dispatch:
+    inputs:
+      test_message:
+        description: 'نص رسالة تجريبية (اتركه فارغاً للاستخدام التلقائي)'
+        required: false
+        default: ''
+
+jobs:
+  send-reminder:
+    name: إرسال الذكر إلى القناة
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      # 1. جلب الكود من المستودع
+      - name: 📦 جلب الكود
+        uses: actions/checkout@v4
+
+      # 2. إعداد بيئة Node.js
+      - name: 🟢 إعداد Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. تثبيت الحزم
+      - name: 📥 تثبيت الحزم
+        run: npm ci --only=production
+
+      # 4. تشغيل سكربت الإرسال
+      - name: 🕌 إرسال الذكر
+        env:
+          SESSION_DATA: ${{ secrets.SESSION_DATA }}
+        run: node send-action.js
+
+      # 5. عرض وقت الإرسال في السجل
+      - name: 📋 توقيت الإرسال
+        run: |
+          echo "تم الإرسال بنجاح في:"
+          date -u "+%Y-%m-%d %H:%M:%S UTC"
