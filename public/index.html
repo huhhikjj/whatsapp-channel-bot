@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بوت أذكار قنوات الواتساب | لوحة التحكم الذكية</title>
+  <meta name="description" content="لوحة تحكم ذكية لجدولة وإرسال الأذكار والتذكيرات بالصلاة على النبي لقنوات الواتساب تلقائياً كل ساعة">
+  <!-- Google Fonts: Cairo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient glow background -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <div class="app-container">
+    <!-- Top Navbar -->
+    <header class="top-nav">
+      <div class="brand">
+        <div class="logo-icon">
+          <i class="fa-solid fa-kaaba"></i>
+        </div>
+        <div class="brand-text">
+          <h1>مُذكِّر قنوات الواتساب</h1>
+          <p>جدولة أذكار وتذكيرات الصلاة على النبي ﷺ تلقائياً</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Live Connection Pill -->
+        <div id="connection-pill" class="status-pill status-disconnected">
+          <span class="status-dot"></span>
+          <span id="connection-text">غير متصل</span>
+        </div>
+
+        <!-- Clock -->
+        <div class="live-clock" id="live-clock">
+          <i class="fa-regular fa-clock"></i>
+          <span id="clock-time">--:--:--</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Grid Layout -->
+    <main class="dashboard-grid">
+      
+      <!-- Left Column / Primary Control: Connection & Settings -->
+      <section class="grid-col primary-col">
+
+        <!-- 1. WhatsApp Connection Card -->
+        <div class="card glass-card" id="connection-card">
+          <div class="card-header">
+            <div class="header-title">
+              <i class="fa-brands fa-whatsapp text-green"></i>
+              <h2>حالة اتصال واتساب</h2>
+            </div>
+            <button id="btn-restart-wa" class="btn-icon" title="إعادة تشغيل الاتصال">
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+          </div>
+
+          <div class="card-body">
+            <!-- QR Code Section (Shown when disconnected) -->
+            <div id="qr-container" class="qr-box">
+              <div class="qr-wrapper">
+                <div id="qr-loading" class="qr-placeholder">
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  <p>جاري تحضير رمز QR...</p>
+                </div>
+                <img id="qr-image" src="" alt="WhatsApp QR Code" class="hidden">
+              </div>
+              <div class="qr-instructions">
+                <ol>
+                  <li>افتح تطبيق واتساب على هاتفك.</li>
+                  <li>اضغط على <strong>القائمة (⋮)</strong> أو <strong>الإعدادات</strong>.</li>
+                  <li>اختر <strong>الأجهزة المرتبطة (Linked Devices)</strong>.</li>
+                  <li>امسح الرمز الظاهر بالأعلى.</li>
+                </ol>
+              </div>
+            </div>
+
+            <!-- Connected Info Section (Shown when connected) -->
+            <div id="connected-container" class="connected-box hidden">
+              <div class="success-avatar">
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
+              <div class="user-meta">
+                <h3 id="wa-user-name">متصل بنجاح</h3>
+                <span id="wa-user-phone" class="phone-tag">---</span>
+              </div>
+              <div class="connected-badge">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>الجلسة نشطة ومحفوظة بنجاح</span>
+              </div>
+              <button id="btn-logout-wa" class="btn btn-outline-danger">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                تسجيل الخروج وربط حساب آخر
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Target Channel Selector & Scheduling Card -->
+        <div class="card glass-card" id="channel-card">
+          <div class="card-header">
+            <div class="header-title">
+              <i class="fa-solid fa-bullhorn text-gold"></i>
+              <h2>إعدادات القناة والجدولة</h2>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <!-- Channel Picker -->
+            <div class="form-group">
+              <label for="channel-select">
+                <i class="fa-solid fa-tower-broadcast"></i>
+                اختر القناة المستهدفة:
+              </label>
+              <div class="select-wrapper">
+                <select id="channel-select" class="form-control">
+                  <option value="">-- اضغط لتحديث قنواتك --</option>
+                </select>
+                <button id="btn-refresh-channels" class="btn btn-secondary btn-sm" title="جلب قنواتي">
+                  <i class="fa-solid fa-rotate"></i>
+                  تحديث
+                </button>
+              </div>
+              <p class="form-hint">ملاحظة: يجب أن يكون حسابك مشرفاً (Admin) في القناة للإرسال إليها.</p>
+            </div>
+
+            <!-- Manual JID input fallback -->
+            <div class="form-group">
+              <label for="manual-jid">
+                <i class="fa-solid fa-hashtag"></i>
+                أو أدخل معرّف القناة (JID) يدوياً:
+              </label>
+              <input type="text" id="manual-jid" class="form-control" placeholder="مثال: 120363xxxxxxxx@newsletter">
+            </div>
+
+            <!-- Interval & Timer -->
+            <div class="form-row">
+              <div class="form-group col">
+                <label for="interval-select">
+                  <i class="fa-regular fa-clock"></i>
+                  معدل تكرار الإرسال:
+                </label>
+                <select id="interval-select" class="form-control">
+                  <option value="15">كل 15 دقيقة</option>
+                  <option value="30">كل 30 دقيقة</option>
+                  <option value="60" selected>كل ساعة (موصى به)</option>
+                  <option value="120">كل ساعتين</option>
+                  <option value="180">كل 3 ساعات</option>
+                  <option value="360">كل 6 ساعات</option>
+                  <option value="custom">تحديد مخصص بالدقائق...</option>
+                </select>
+              </div>
+
+              <div class="form-group col hidden" id="custom-minutes-group">
+                <label for="custom-minutes">عدد الدقائق:</label>
+                <input type="number" id="custom-minutes" class="form-control" min="1" max="1440" placeholder="مثلاً: 45">
+              </div>
+
+              <div class="form-group col">
+                <label for="mode-select">
+                  <i class="fa-solid fa-shuffle"></i>
+                  نمط اختيار الأذكار:
+                </label>
+                <select id="mode-select" class="form-control">
+                  <option value="sequential" selected>بالترتيب بالتتابع</option>
+                  <option value="random">عشوائي بدون تكرار متتالي</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Power Toggle & Manual Trigger -->
+            <div class="bot-actions-panel">
+              <div class="toggle-control">
+                <label class="switch">
+                  <input type="checkbox" id="toggle-scheduler">
+                  <span class="slider round"></span>
+                </label>
+                <div class="toggle-label">
+                  <span class="main-label">تفعيل الإرسال التلقائي المستمر</span>
+                  <span class="sub-label" id="scheduler-status-text">البوت متوقف حالياً</span>
+                </div>
+              </div>
+
+              <div class="buttons-bar">
+                <button id="btn-save-settings" class="btn btn-primary">
+                  <i class="fa-solid fa-floppy-disk"></i>
+                  حفظ الإعدادات
+                </button>
+                <button id="btn-send-now" class="btn btn-success" title="إرسال رسالة تجريبية الآن فوراً للقناة">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  إرسال تجريبي الآن
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right Column: Status Banner, Next Message, Reminders Bank & Logs -->
+      <section class="grid-col secondary-col">
+
+        <!-- 3. Countdown & Next Preview Banner -->
+        <div class="card glass-card schedule-banner-card">
+          <div class="banner-content">
+            <div class="banner-stat">
+              <span class="stat-title">الوقت المتبقي للرسالة القادمة</span>
+              <div class="countdown-display" id="countdown-display">00:00:00</div>
+              <span class="stat-subtitle" id="next-time-text">لم يتم بدء الجدولة بعد</span>
+            </div>
+            <div class="banner-preview">
+              <div class="preview-badge">
+                <i class="fa-regular fa-eye"></i>
+                معاينة الرسالة القادمة
+              </div>
+              <blockquote id="next-message-preview" class="quote-preview">
+                "اللَّهُمَّ صَلِّ وَسَلِّمْ وَبَارِكْ عَلَى نَبِيِّنَا مُحَمَّدٍ وَعَلَى آلِهِ وَصَحْبِهِ أَجْمَعِينَ"
+              </blockquote>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Reminders Bank Manager -->
+        <div class="card glass-card" id="reminders-card">
+          <div class="card-header">
+            <div class="header-title">
+              <i class="fa-solid fa-book-quran text-cyan"></i>
+              <h2>بنك الأذكار والتذكيرات</h2>
+              <span class="badge" id="reminders-count">0 ذكر</span>
+            </div>
+            <div class="header-btns">
+              <button id="btn-open-add-modal" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-plus"></i>
+                إضافة ذكر جديد
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="reminders-list" id="reminders-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Live Activity Logs -->
+        <div class="card glass-card" id="logs-card">
+          <div class="card-header">
+            <div class="header-title">
+              <i class="fa-solid fa-list-check text-purple"></i>
+              <h2>سجل العمليات والرسائل المرسلة</h2>
+            </div>
+            <button id="btn-clear-logs" class="btn-text" title="مسح السجل">
+              مسح السجل
+            </button>
+          </div>
+
+          <div class="card-body">
+            <div class="logs-container" id="logs-container">
+              <div class="empty-state">
+                <i class="fa-regular fa-clock"></i>
+                <p>لا توجد رسائل مرسلة بعد. عند تشغيل الجدولة ستظهر السجلات هنا لحظياً.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Cloud Deployment Instructions Quick Card -->
+        <div class="card glass-card deployment-card">
+          <div class="card-header">
+            <div class="header-title">
+              <i class="fa-solid fa-cloud-arrow-up text-cyan"></i>
+              <h2>طريقة التشغيل على سيرفر سحابي مجاني 24/7</h2>
+            </div>
+          </div>
+          <div class="card-body">
+            <p class="deploy-desc">
+              حتى يعمل البوت 24 ساعة دون أن تترك لابتوبك أو كمبيوترك مفتوحاً، تم تجهيز ملفات <strong>Dockerfile</strong> و <strong>Render / Railway</strong> جاهزة للرفع بنقرة زر واحدة مجاناً!
+            </p>
+            <div class="deploy-steps-summary">
+              <div class="deploy-step">
+                <span class="step-num">1</span>
+                <span>ارفع المشروع على مستودع GitHub خاص بك.</span>
+              </div>
+              <div class="deploy-step">
+                <span class="step-num">2</span>
+                <span>اربطه بمنصة استضافة مجانية تدعم Node.js (مثل Render أو Railway أو Koyeb أو VPS).</span>
+              </div>
+              <div class="deploy-step">
+                <span class="step-num">3</span>
+                <span>افتح رابط لوحة التحكم وامسح الرمز، وسيعمل إلى الأبد في السحابة!</span>
+              </div>
+            </div>
+            <button id="btn-open-deploy-guide" class="btn btn-outline-cyan">
+              <i class="fa-solid fa-book-open"></i>
+              عرض دليل الرفع خطوة بخطوة بالصور والأوامر
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Modal: Add / Edit Reminder -->
+  <div id="modal-reminder" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-title">إضافة تذكير / ذكر جديد</h3>
+        <button class="btn-close" id="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-index" value="-1">
+        <div class="form-group">
+          <label for="reminder-text">نص الرسالة أو الذكر أو الصلاة على النبي:</label>
+          <textarea id="reminder-text" rows="6" class="form-control" placeholder="اكتب الذكر أو صيغة الصلاة على النبي ﷺ هنا..."></textarea>
+          <p class="form-hint">يمكنك استخدام الرموز التعبيرية والتنسيقات النجمية للخط العريض (*نص*).</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-reminder" class="btn btn-primary">
+          <i class="fa-solid fa-check"></i>
+          حفظ الذكر
+        </button>
+        <button id="btn-cancel-reminder" class="btn btn-secondary">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Cloud Deployment Detailed Guide -->
+  <div id="modal-deploy" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog modal-large">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-cloud-arrow-up text-cyan"></i> دليل رفع البوت على سيرفر سحابي 24/7 مجاناً</h3>
+        <button class="btn-close" id="btn-close-deploy-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body modal-scroll">
+        <div class="guide-section">
+          <h4>الخيار الأول: الاستضافة المجانية على Render.com (أسهل وأسرع خيار)</h4>
+          <ol class="styled-list">
+            <li>أنشئ حساباً مجانياً على <strong>GitHub.com</strong> ثم أنشئ مستودعاً جديداً (Repository).</li>
+            <li>ارفع ملفات هذا المجلد إليه.</li>
+            <li>سجل دخولك إلى <strong>Render.com</strong> واضغط <strong>New +</strong> ثم <strong>Web Service</strong>.</li>
+            <li>اختر مستودع GitHub الذي رفعته.</li>
+            <li>في إعدادات <strong>Build Command</strong> اكتب: <code>npm install</code></li>
+            <li>في إعدادات <strong>Start Command</strong> اكتب: <code>npm start</code></li>
+            <li>اضغط <strong>Deploy Web Service</strong>. ستفتح لك رابط لوحة التحكم الخاصة بك في المتصفح!</li>
+            <li>افتح الرابط من موبايلك أو الكمبيوتر، امسح كود QR، وسيبدأ البوت بالعمل على السيرفر كل ساعة دون توقف.</li>
+          </ol>
+        </div>
+
+        <div class="guide-section">
+          <h4>الخيار الثاني: سيرفر خاص (VPS - Ubuntu / Debian)</h4>
+          <p>إذا كان لديك سيرفر سحابي خاص (VPS)، يمكنك تشغيله باستخدام PM2 ليعمل في الخلفية دائماً:</p>
+          <pre class="code-block"><code>git clone &lt;رابط-مستودعك&gt;
+cd whatsapp-channel-bot
+npm install
+npm install -g pm2
+pm2 start server.js --name "whatsapp-bot"
+pm2 save
+pm2 startup</code></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-dismiss-deploy" class="btn btn-secondary">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

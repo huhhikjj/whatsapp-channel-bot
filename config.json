@@ -1,0 +1,10 @@
+{
+  "intervalMinutes": 60,
+  "targetChannelJid": "120363412788509710@newsletter",
+  "targetChannelName": "قناتي على الواتساب",
+  "isEnabled": true,
+  "mode": "sequential",
+  "currentIndex": 0,
+  "lastSentTime": "2026-10-22T05:36:56.815Z",
+  "nextScheduledTime": "2026-10-22T06:36:36.581Z"
+}
